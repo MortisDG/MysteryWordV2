@@ -9,6 +9,260 @@
 ;; Letterbox and blackout
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+
+(define *timer-start* (seconds 0))
+
+
+
+
+(deftype crate-bank (basic)
+  ((COLLIDE_YOFF           float  :offset-assert   4)
+   (COLLIDE_RADIUS         float  :offset-assert   8)
+   (DARKECO_EXPLODE_RADIUS float  :offset-assert  12)
+   )
+  :method-count-assert 9
+  :size-assert         #x10
+  :flag-assert         #x900000010
+  )
+
+(deftype crate (process-drawable)
+  ((root-override       collide-shape-moving         :offset        112)
+   (smush               smush-control        :inline :offset-assert 176)
+   (base                vector               :inline :offset-assert 208)
+   (look                symbol                       :offset-assert 224)
+   (defense             symbol                       :offset-assert 228)
+   (incomming-attack-id uint64                       :offset-assert 232)
+   (target              handle                       :offset-assert 240)
+   (child-count         int32                        :offset-assert 248)
+   (victory-anim        spool-anim                   :offset-assert 252)
+   )
+  :heap-base #x90
+  :method-count-assert 30
+  :size-assert         #x100
+  :flag-assert         #x1e00900100
+  (:methods
+    (wait () _type_ :state 20)
+    (die (symbol int) _type_ :state 21)
+    (special-contents-die () _type_ :state 22)
+    (bounce-on () _type_ :state 23)
+    (notice-blue (handle) _type_ :state 24)
+    (params-init (_type_ entity) none 25)
+    (art-init (_type_) crate 26)
+    (params-set! (_type_ symbol symbol) none 27)
+    (dummy-28 (_type_) none 28)
+    (smush-update! (_type_) none 29)
+    )
+  )
+
+(declare-type crate-buzzer crate)
+
+(deftype baseplat (process-drawable)
+  ((root-override collide-shape-moving         :offset        112)
+   (smush         smush-control        :inline :offset-assert 176)
+   (basetrans     vector               :inline :offset-assert 208)
+   (bouncing      symbol                       :offset-assert 224)
+   )
+  :heap-base #x80
+  :method-count-assert 27
+  :size-assert         #xe4
+  :flag-assert         #x1b008000e4
+  (:methods
+    (dummy-20 (_type_) none 20)
+    (dummy-21 (_type_) none 21)
+    (dummy-22 (_type_) none 22)
+    (get-unlit-skel (_type_) skeleton-group 23)
+    (dummy-24 (_type_) none 24)
+    (TODO-RENAME-25 (_type_) sparticle-launch-group 25)
+    (dummy-26 (_type_) none 26)
+    )
+  )
+
+(deftype orb-cache-top (baseplat)
+  ((active-distance   float     :offset-assert 228)
+   (inactive-distance float     :offset-assert 232)
+   (money-list        handle 60 :offset-assert 240)
+   (money-pos-list    float  60 :offset-assert 720)
+   (money-pos-actual  float  60 :offset-assert 960)
+   (platform-pos      float     :offset-assert 1200)
+   (root-pos          float     :offset-assert 1204)
+   (money             int32     :offset-assert 1208)
+   (activated         symbol    :offset-assert 1212)
+   )
+  :heap-base #x450
+  :method-count-assert 29
+  :size-assert         #x4c0
+  :flag-assert         #x1d045004c0
+  (:methods
+    (pos-logic (_type_ symbol) symbol 27)
+    (calculate-pos (_type_ symbol) none 28)
+    )
+  (:states
+    (orb-cache-top-activate symbol)
+    (orb-cache-top-complete symbol)
+    (orb-cache-top-idle symbol)
+    )
+  )
+
+(defenum collectable-flags
+  :bitfield #t
+  :type uint32
+  (trans 0)
+  (fade 1)
+  (can-collect 2)
+  (fading 3)
+  (suck 4)
+  (ignore-blue 5)
+  (anim 6)
+  )
+
+(deftype collectable (process-drawable)
+  ((root-override   collide-shape-moving         :offset        112)
+   (pickup-type     pickup-type                  :offset-assert 176)
+   (pickup-amount   float                        :offset-assert 180)
+   (notify-parent   basic                        :offset-assert 184)
+   (old-base        vector               :inline :offset-assert 192)
+   (base            vector               :inline :offset-assert 208)
+   (extra-trans     vector               :inline :offset-assert 224)
+   (jump-pos        vector               :inline :offset-assert 240)
+   (flags           collectable-flags            :offset-assert 256)
+   (birth-time      time-frame                   :offset-assert 264)
+   (collect-timeout time-frame                   :offset-assert 272)
+   (fadeout-timeout time-frame                   :offset-assert 280)
+   (bob-offset      int64                        :offset-assert 288)
+   (bob-amount      float                        :offset-assert 296)
+   (pickup-handle   handle                       :offset-assert 304)
+   (actor-pause     symbol                       :offset-assert 312)
+   )
+  :heap-base #xd0
+  :method-count-assert 22
+  :size-assert         #x13c
+  :flag-assert         #x1600d0013c
+  (:methods
+    (initialize (_type_) _type_ 20)
+    (initialize-params (_type_ time-frame float) none 21)
+    )
+  )
+
+(deftype eco-collectable (collectable)
+  ((eco-effect          sparticle-launch-group         :offset-assert 316)
+   (collect-effect      sparticle-launch-group         :offset-assert 320)
+   (collect-effect2     sparticle-launch-group         :offset-assert 324)
+   (collect-effect-time time-frame                     :offset-assert 328)
+   (respawn-delay       time-frame                     :offset-assert 336)
+   (sound-name          sound-spec                     :offset-assert 344)
+   (target              handle                         :offset-assert 352)
+   (suck-time           time-frame                     :offset-assert 360)
+   (suck-y-offset       float                          :offset-assert 368)
+   (speed               vector                 :inline :offset-assert 384)
+   (movie-pos-index     int32                          :offset-assert 400)
+   )
+  :heap-base #x130
+  :method-count-assert 31
+  :size-assert         #x194
+  :flag-assert         #x1f01300194
+  (:methods
+    (wait () _type_ :state 22)
+    (pickup (object handle) _type_ :state 23)
+    (die () _type_ :state 24)
+    (jump () _type_ :state 25)
+    (notice-blue (handle) _type_ :state 26)
+    (initialize-effect (_type_ pickup-type) none 27)
+    (initialize-eco (_type_ entity-actor pickup-type float) object 28)
+    (animate (_type_) none 29)
+    (blocked () _type_ :state 30)
+    )
+  )
+
+(deftype money (eco-collectable)
+  ()
+  :heap-base #x130
+  :method-count-assert 31
+  :size-assert         #x194
+  :flag-assert         #x1f01300194
+  )
+
+(deftype fuel-cell (eco-collectable)
+  ((victory-anim spool-anim  :offset-assert 404)
+   (state-object symbol      :offset-assert 408)
+   )
+  :heap-base #x130
+  :method-count-assert 31
+  :size-assert         #x19c
+  :flag-assert         #x1f0130019c
+  (:states
+    (fuel-cell-clone-anim handle)
+    (fuel-cell-spline-slider handle float float)
+    )
+  )
+  
+
+(defun move-actor ((actor-name string) (x float) (y float) (z float))
+  (when (entity-by-name actor-name)
+    (let* ((entity-actor (entity-by-name actor-name))
+           (actor (-> entity-actor extra process))
+           )
+      (when actor
+        (case (-> actor type)
+          ((fuel-cell)
+              (set-vector! (-> entity-actor trans) (meters x) (meters y) (meters z) 1.0)
+              (set-vector! (-> entity-actor extra trans) (meters x) (meters y) (meters z) 1.0)
+              (set-vector! (-> (the process-drawable actor) root trans) (meters x) (meters y) (meters z) 1.0)
+              (set-vector! (-> (the fuel-cell actor) base) (meters x) (meters y) (meters z) 1.0)
+              (set-vector! (-> (the fuel-cell actor) root-override trans) (meters x) (meters y) (meters z) 1.0)
+            (when (name= (-> (the fuel-cell actor) state name) 'wait)
+              ;; only move collision when idle (messes up glowing in cutscene)
+              (set! (-> (the fuel-cell actor) root-override root-prim world-sphere x) (meters x))
+              (set! (-> (the fuel-cell actor) root-override root-prim world-sphere y) (meters y))
+              (set! (-> (the fuel-cell actor) root-override root-prim world-sphere z) (meters z))
+              )
+            )
+          ((orb-cache-top)
+            ;; don't move while its activated (let it go up/down)
+            (when (not (name= (-> (the orb-cache-top actor) state name) 'orb-cache-top-activate))
+              (set-vector! (-> entity-actor trans) (meters x) (meters y) (meters z) 1.0)
+              (set-vector! (-> entity-actor extra trans) (meters x) (meters y) (meters z) 1.0)
+              (set-vector! (-> (the process-drawable actor) root trans) (meters x) (meters y) (meters z) 1.0)
+              (set-vector! (-> (the orb-cache-top actor) basetrans) (meters x) (meters y) (meters z) 1.0)
+              (set-vector! (-> (the orb-cache-top actor) root-override trans) (meters x) (meters y) (meters z) 1.0)
+              (set! (-> (the orb-cache-top actor) root-override root-prim world-sphere x) (meters x))
+              (set! (-> (the orb-cache-top actor) root-override root-prim world-sphere y) (meters y))
+              (set! (-> (the orb-cache-top actor) root-override root-prim world-sphere z) (meters z))
+              (set-vector! (-> (the orb-cache-top actor) draw origin) (meters x) (meters y) (meters z) 1.0)
+              (let ((radius (-> (the process-drawable actor) draw radius))
+                    (bounds (res-lump-data entity-actor 'visvol (inline-array vector)))
+                    )
+                (set-vector! (-> bounds 0) (- (meters x) radius) (meters y) (- (meters z) radius) 1.0)
+                (set-vector! (-> bounds 1) (+ (meters x) radius) (meters y) (+ (meters z) radius) 1.0)
+                )
+              )
+            )
+          ((money)
+            ;; don't move orbs if being blue-eco-sucked
+            (when (not (logtest? (-> (the money actor) flags) (collectable-flags suck)))
+              (set-vector! (-> entity-actor trans) (meters x) (meters y) (meters z) 1.0)
+              (set-vector! (-> entity-actor extra trans) (meters x) (meters y) (meters z) 1.0)
+              (set-vector! (-> (the process-drawable actor) root trans) (meters x) (meters y) (meters z) 1.0)
+              (set-vector! (-> (the money actor) base) (meters x) (meters y) (meters z) 1.0)
+              (set-vector! (-> (the money actor) root-override trans) (meters x) (meters y) (meters z) 1.0)
+              (set! (-> (the money actor) root-override root-prim world-sphere x) (meters x))
+              (set! (-> (the money actor) root-override root-prim world-sphere y) (meters y))
+              (set! (-> (the money actor) root-override root-prim world-sphere z) (meters z))
+              )
+            )
+          
+          (else
+            (format 0 "unexpected actor type ~S ~S ~S~%" actor-name (-> entity-actor type) (-> actor type))
+            (set-vector! (-> entity-actor trans) (meters x) (meters y) (meters z) 1.0)
+            (set-vector! (-> entity-actor extra trans) (meters x) (meters y) (meters z) 1.0)
+            ;; (set-vector! (-> (the process-drawable actor) root trans) (meters x) (meters y) (meters z) 1.0)
+            )
+          )
+        )
+      )
+    )
+  (none)
+  )
+
 (defun set-letterbox-frames ((arg0 time-frame))
   "Set the letterbox frame counter for arg0 frames in the future"
   (set! (-> *game-info* letterbox-time) (+ (current-time) arg0))
@@ -81,7 +335,7 @@
   (none)
   )
 
-
+6
 ;;;;;;;;;;;;;;;;;;;;;
 ;; Pause/Master Mode
 ;;;;;;;;;;;;;;;;;;;;;
@@ -98,7 +352,8 @@
   )
 
 (defun movie? ()
-  "Are we in a movie?"
+
+"Are we in a movie?"
   (logtest? (-> *kernel-context* prevent-from-run) (process-mask movie))
   )
 
@@ -371,6 +626,76 @@
 (defun main-cheats ()
   "Handle cheat codes and timeout"
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Keybinds
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(when (and (cpad-hold? 0 l3)
+             (or *cheat-mode* (= *kernel-boot-message* 'play)) ;; not in demo
+             
+             )
+              (when (and (cpad-hold? 0 up))
+
+              ;; Do code here
+              (speedrun-start-run)
+              )
+ )
+
+(when (and (cpad-hold? 0 l3)
+             (or *cheat-mode* (= *kernel-boot-message* 'play)) ;; not in demo
+             
+             )
+              (when (and (cpad-hold? 0 left))
+
+              ;; Do code here
+              (send-event *target* 'loading)
+              )
+ )
+
+(when (and (cpad-hold? 0 l3)
+             (or *cheat-mode* (= *kernel-boot-message* 'play)) ;; not in demo
+             
+             )
+              (when (and (cpad-hold? 0 right))
+
+              ;; Do code here
+              (when (not (movie?))(target-attack-up *target* 'attack 'melt))
+              )
+ )
+
+(when (and (cpad-hold? 0 l3)
+             (or *cheat-mode* (= *kernel-boot-message* 'play)) ;; not in demo
+             
+             )
+              (when (and (cpad-hold? 0 down))
+
+              ;; Do code here
+              (when (not (movie?))(set! (-> *load-state* want 0 display?) #f))
+              )
+ )
+
+ (when (and (cpad-hold? 0 l3)
+             (or *cheat-mode* (= *kernel-boot-message* 'play)) ;; not in demo
+             
+             )
+              (when (and (cpad-hold? 0 l1))
+
+              ;; Do code here
+              (start 'play (get-continue-by-name *game-info* "citadel-elevator"))
+              )
+ )
+
+  (when (and (cpad-hold? 0 l3)
+             (or *cheat-mode* (= *kernel-boot-message* 'play)) ;; not in demo
+             
+             )
+              (when (and (cpad-hold? 0 r1))
+
+              ;; Do code here
+              (set! (-> (the-as fact-info-target (-> *target* fact))health) (+ 1.0))
+              )
+ )
+
   ;; look for codes when L3 is pushed
   (when (and (cpad-hold? 0 l3)
              (or *cheat-mode* (= *kernel-boot-message* 'play)) ;; not in demo
@@ -624,6 +949,47 @@
     (while *run*
       ;; start immediately after all process updates finish.
       (profiler-instant-event "display-loop-top")
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Game codes
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Rolljump / Sucksuck
+(when (= (-> *game-info* fuel) 4.0)(set! (-> *TARGET-bank* wheel-flip-dist)(meters 0)))
+(when (= (-> *game-info* fuel) 10.0)(set! (-> *TARGET-bank* wheel-flip-dist)(meters 17.5)))
+(when (= (-> *game-info* fuel) 0.0)(set! (-> *TARGET-bank* wheel-flip-dist)(meters 17.5))) ;; In case of -Restart- return to normal value
+
+(when (= (-> *game-info* fuel) 4.0)(set! (-> *FACT-bank* suck-suck-dist) (meters 0.0))(set! (-> *FACT-bank* suck-bounce-dist) (meters 0.0)))
+(when (= (-> *game-info* fuel) 8.0)(set! (-> *FACT-bank* suck-suck-dist) (meters 7.5))(set! (-> *FACT-bank* suck-bounce-dist) (meters 18.0)))
+(when (= (-> *game-info* fuel) 0.0)(set! (-> *FACT-bank* suck-suck-dist) (meters 7.5))(set! (-> *FACT-bank* suck-bounce-dist) (meters 18.0))) ;; In case of -Restart- return to normal value
+
+;; Mirror Mode
+(when (= (-> *game-info* fuel) 11.0)(logior! (-> *pc-settings* cheats) (pc-cheats mirror))(logclear! (-> *pc-settings* cheats-known) (pc-cheats mirror)))
+(when (= (-> *game-info* fuel) 14.0)(logclear! (-> *pc-settings* cheats) (pc-cheats mirror))(logior! (-> *pc-settings* cheats-known) (pc-cheats mirror)))
+(when (= (-> *game-info* fuel) 0.0)(logclear! (-> *pc-settings* cheats) (pc-cheats mirror))(logior! (-> *pc-settings* cheats-known) (pc-cheats mirror))) ;; In case of -Restart- return to normal value
+
+;; No Boosted
+(when (= (-> *game-info* fuel) 15.0)(set! (-> *edge-surface* fric) 1530000.0))
+(when (= (-> *game-info* fuel) 19.0)(set! (-> *edge-surface* fric) 30720.0))
+(when (= (-> *game-info* fuel) 0.0)(set! (-> *edge-surface* fric) 30720.0)) ;; In case of -Restart- return to normal value
+
+;; Shortfall
+(when (= (-> *game-info* fuel) 20.0)(set! (-> *TARGET-bank* fall-far)(meters 2.5))(set! (-> *TARGET-bank* fall-far-inc) (meters 3.5)))
+(when (= (-> *game-info* fuel) 22.0)(set! (-> *TARGET-bank* fall-far)(meters 30))(set! (-> *TARGET-bank* fall-far-inc) (meters 20)))
+(when (= (-> *game-info* fuel) 0.0)(set! (-> *TARGET-bank* fall-far)(meters 30))(set! (-> *TARGET-bank* fall-far-inc) (meters 20))) ;; In case of -Restart- return to normal value
+
+;; Superboosted
+(when (= (-> *game-info* fuel) 24.0)(set! (-> *edge-surface* fric) 1.0))
+(when (= (-> *game-info* fuel) 30.0)(set! (-> *edge-surface* fric) 30720.0))
+(when (= (-> *game-info* fuel) 0.0)(set! (-> *edge-surface* fric) 30720.0))
+
+;; Mirror Mode Final Boss
+(when (= (-> (level-get-target-inside *level*) name) 'finalboss)(logior! (-> *pc-settings* cheats) (pc-cheats mirror))(logclear! (-> *pc-settings* cheats-known) (pc-cheats mirror)))
+
+;; Keybinds
+
+
 
       ;; drawing effects to be used in foreground drawing.
       (with-profiler "foreground-effects"
