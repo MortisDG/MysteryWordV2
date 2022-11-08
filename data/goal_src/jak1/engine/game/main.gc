@@ -981,16 +981,36 @@
 
 ;; Superboosted
 (when (= (-> *game-info* fuel) 24.0)(set! (-> *edge-surface* fric) 1.0))
-(when (= (-> *game-info* fuel) 30.0)(set! (-> *edge-surface* fric) 30720.0))
+(when (= (-> *game-info* fuel) 45.0)(set! (-> *edge-surface* fric) 30720.0))
 (when (= (-> *game-info* fuel) 0.0)(set! (-> *edge-surface* fric) 30720.0))
 
 ;; Mirror Mode Final Boss
 (when (= (-> (level-get-target-inside *level*) name) 'finalboss)(logior! (-> *pc-settings* cheats) (pc-cheats mirror))(logclear! (-> *pc-settings* cheats-known) (pc-cheats mirror)))
 
-;; Keybinds
+;; Rolljump / Sucksuck
+(when (= (-> *game-info* fuel) 46.0)(set! (-> *TARGET-bank* wheel-flip-dist)(meters 0)))
+(when (= (-> *game-info* fuel) 56.0)(set! (-> *TARGET-bank* wheel-flip-dist)(meters 17.5)))
+(when (= (-> *game-info* fuel) 0.0)(set! (-> *TARGET-bank* wheel-flip-dist)(meters 17.5))) ;; In case of -Restart- return to normal value
 
+(when (= (-> *game-info* fuel) 46.0)(set! (-> *FACT-bank* suck-suck-dist) (meters 0.0))(set! (-> *FACT-bank* suck-bounce-dist) (meters 0.0)))
+(when (= (-> *game-info* fuel) 50.0)(set! (-> *FACT-bank* suck-suck-dist) (meters 7.5))(set! (-> *FACT-bank* suck-bounce-dist) (meters 18.0)))
+(when (= (-> *game-info* fuel) 0.0)(set! (-> *FACT-bank* suck-suck-dist) (meters 7.5))(set! (-> *FACT-bank* suck-bounce-dist) (meters 18.0))) ;; In case of -Restart- return to normal value
 
+;; Mirror Mode
+(when (= (-> *game-info* fuel) 57.0)(logior! (-> *pc-settings* cheats) (pc-cheats mirror))(logclear! (-> *pc-settings* cheats-known) (pc-cheats mirror)))
+(when (= (-> *game-info* fuel) 60.0)(logclear! (-> *pc-settings* cheats) (pc-cheats mirror))(logior! (-> *pc-settings* cheats-known) (pc-cheats mirror)))
+(when (= (-> *game-info* fuel) 0.0)(logclear! (-> *pc-settings* cheats) (pc-cheats mirror))(logior! (-> *pc-settings* cheats-known) (pc-cheats mirror))) ;; In case of -Restart- return to normal value
 
+;; Shortfall
+(when (= (-> *game-info* fuel) 61.0)(set! (-> *TARGET-bank* fall-far)(meters 2.5))(set! (-> *TARGET-bank* fall-far-inc) (meters 3.5)))
+(when (= (-> *game-info* fuel) 66.0)(set! (-> *TARGET-bank* fall-far)(meters 30))(set! (-> *TARGET-bank* fall-far-inc) (meters 20)))
+(when (= (-> *game-info* fuel) 0.0)(set! (-> *TARGET-bank* fall-far)(meters 30))(set! (-> *TARGET-bank* fall-far-inc) (meters 20))) ;; In case of -Restart- return to normal value
+           
+;; No Boosted
+(when (= (-> *game-info* fuel) 67.0)(set! (-> *edge-surface* fric) 1530000.0))
+(when (= (-> *game-info* fuel) 72.0)(set! (-> *edge-surface* fric) 30720.0))
+(when (= (-> *game-info* fuel) 0.0)(set! (-> *edge-surface* fric) 30720.0)) ;; In case of -Restart- return to normal value           
+           
       ;; drawing effects to be used in foreground drawing.
       (with-profiler "foreground-effects"
         (blerc-execute)
