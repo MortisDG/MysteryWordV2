@@ -638,6 +638,7 @@
 
               ;; Do code here
               (speedrun-start-run)
+              (auto-save-command 'auto-save 0 0 *default-pool*)
               )
  )
 
